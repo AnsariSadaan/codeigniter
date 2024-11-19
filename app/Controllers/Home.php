@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Models\UserModel;
 
 
@@ -9,17 +11,24 @@ class Home extends BaseController
     {
         return view('welcome_message');
     }
-
-    public function userdata(){
+    public function dashboard()
+    {
+        if (!$this->session->has('user')) {
+            return redirect()->to('/login');
+        }
         $user_model = new UserModel();
         $users = $user_model->findAll();
-        return view('userdata', ['users' => $users]);
-        // print_r($users);
+        return view('dashboard', ['users' => $users]);
     }
 
 
-    public function signup() {
-        if(isset($_POST['name'])){
+    public function signup()
+    
+    {
+        if ($this->session->has('user')) {
+            return redirect()->to('/dashboard');
+        }
+        if (isset($_POST['name'])) {
             $user_model = new UserModel();
             $data = [
                 'name' => $this->request->getPost('name'),
@@ -27,42 +36,78 @@ class Home extends BaseController
                 'password' => password_hash($this->request->getPost('password'), PASSWORD_BCRYPT)
             ];
             $result = $user_model->save($data);
-            if($result){
+            if ($result) {
                 return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
-            }else {
+            } else {
                 return redirect()->back()->with('error', 'Failed to register. Please try again.');
             }
         }
         return view('signup');
     }
 
-    public function login() {
-        if(isset($_POST['email'])){
+    public function login()
+    {
+        if ($this->session->has('user')) {
+            return redirect()->to('/dashboard');
+        }
+        if (isset($_POST['email'])) {
             $user_model = new UserModel();
             $email = $this->request->getPost('email');
             $password = $this->request->getPost('password');
             $user = $user_model->where('email', $email)->first();
-            if($user){
-                if (password_verify($password, $user->password))    {
+            if ($user) {
+                if (password_verify($password, $user->password)) {
+                    $this->session->set("user", $user);
                     return redirect()->to('/dashboard')->with('success', 'Login successful!');
-                }   else    {
-                        return redirect()->back()->with('error', 'Invalid password. Please try again.');
-                        }
-
-                }   else {
-                            return redirect()->back()->with('error', 'Invalid email. Please try again.');
-                        }
+                } else {
+                    return redirect()->back()->with('error', 'Invalid password. Please try again.');
+                }
+            } else {
+                return redirect()->back()->with('error', 'Invalid email. Please try again.');
             }
-                return view('login');
         }
+        return view('login');
+    }
 
 
-        public function dashboard() {
-            return view('dashboard');
-        }
 
-        public function logout() {
-            
-        }
+    public function logout()
+    {
+        $this->session->remove('user');
+        $this->session->setFlashdata('success', 'You have logged out successfully.');
+        return redirect()->to('/login');
+    }
 
+
+    public function updateUser()
+    {
+        $user_model = new UserModel();
+
+        // Get the submitted data
+        $id = $this->request->getPost('id');
+        $name = $this->request->getPost('name');
+        $email = $this->request->getPost('email');
+
+        // Prepare data for update
+        $updatedData = [];
+        if ($name) $updatedData['name'] = $name;
+        if ($email) $updatedData['email'] = $email;
+
+        // Update the user in the database
+        $user_model->update($id, $updatedData);
+
+        // Redirect to the dashboard with a success message
+        return redirect()->to('/dashboard')->with('success', 'User updated successfully!');
+    }
+
+    public function deleteUser($id)
+    {
+        $user_model = new UserModel();
+
+        // Delete the user from the database
+        $user_model->delete($id);
+
+        // Redirect to the dashboard with a success message
+        return redirect()->to('/dashboard')->with('success', 'User deleted successfully!');
+    }
 }
