@@ -55,7 +55,7 @@
     </div>
 
     <!-- Edit User Modal -->
-    <div id="editModal" class="absolute bg-gray-500 bg-opacity-50 hidden justify-center items-center">
+    <div id="editModal" class="absolute w-full m-auto bg-gray-500 bg-opacity-50 hidden h-screen justify-center items-center">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
             <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Edit User</h2>
             <form id="editForm" action="/update-user" method="POST">
