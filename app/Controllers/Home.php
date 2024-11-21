@@ -38,10 +38,10 @@ class Home extends BaseController
     try {
         // print_r("response"); die;
         $response = $client->get($nodeApiUrl, [
-            'headers' => [
-                'Accept' => 'application/json',
-                // Add any other required headers here
-            ]
+            // 'headers' => [
+            //     'Accept' => 'application/json',
+            //     // 'Authorization' => 'Bearer ' . $this->session->get('token')
+            // ]
         ]);
         if ($response->getStatusCode() === 200) {
             $mongo_users = json_decode($response->getBody()->getContents(), true)['getUsers'] ?? [];
@@ -95,13 +95,7 @@ class Home extends BaseController
     return view('dashboard', ['users' => $combined_data]);
 }
 
-    
-    
-
-
-
     public function signup()
-
     {
         if ($this->session->has('user')) {
             return redirect()->to('/dashboard');
@@ -123,11 +117,11 @@ class Home extends BaseController
                             'name' => $data['name'],
                             'email' => $data['email'],
                             'password' => $this->request->getPost('password')
-                        ]
-                    ]);
-                    if ($response->getStatusCode() === 200) {
-                        return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
-                    }
+                            ]
+                        ]);
+                        if ($response->getStatusCode() === 200) {
+                            return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
+                        }
                 } catch (\Exception $e) {
                     return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
                 }
@@ -166,10 +160,12 @@ class Home extends BaseController
                                 'password'=>$password
                             ]
                             ]);
+                            
                             if($response->getStatusCode() === 200){
                                 $userData = json_decode($response->getBody()->getContents(), true);
                                 $this->session->set("user", $userData['user']);
                                 $this->session->set("token", $userData['token']);
+                                print_r($response); die;
                                 return redirect()->to('/dashboard')->with('success', 'Login successful!');
                             }else {
                                 return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
@@ -187,7 +183,7 @@ class Home extends BaseController
 
     public function logout()
     {
-        // $this->session->remove('token');
+        $this->session->remove('token');
         $this->session->remove('user');
         $client = new Client();
         $nodeApiUrl = 'http://localhost:3000/api/logout';

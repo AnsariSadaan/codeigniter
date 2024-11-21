@@ -31,12 +31,13 @@ const userLogin = async (req ,res)=> {
             res.status(200).send({
                 success: true,
                 message: "Login Successfully",
+                token: token,
                 user: {
                     _id: user._id,
                     name: user.name,
                     email: user.email,
-                },
-                token
+                }
+                
             });
     } catch (error) {
         res.status(500).json({message: "Internal Server Error", error: error.message})

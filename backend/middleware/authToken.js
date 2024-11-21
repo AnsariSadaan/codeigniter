@@ -27,7 +27,7 @@ import JWT from 'jsonwebtoken';
 const authToken = (req, res, next) => {
     try {
         // Get the token from the cookies
-        const token = req.cookies.token;  // Use req.cookies to access the token from the cookie
+        const token = req.cookies?.token //|| req.headers("Authorization")?.replace('Bearer ', "");  // Use req.cookies to access the token from the cookie
 
         if (!token) {
             return res.status(401).json({ message: "Please log in" });
@@ -38,10 +38,8 @@ const authToken = (req, res, next) => {
             if (err) {
                 return res.status(403).json({ message: "Invalid or expired token" });
             }
-
             // Attach the user information to the request object
             req.userId = decoded._id;
-
             // Proceed to the next middleware or route handler
             next();
         });

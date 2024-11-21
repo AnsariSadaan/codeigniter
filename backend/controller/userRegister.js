@@ -38,7 +38,4 @@ const userRegister = async (req, res) => {
   }
 };
 
-
-
-
 export default userRegister;
