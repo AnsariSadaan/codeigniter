@@ -11,79 +11,89 @@ class Home extends BaseController
     {
         return view('login');
     }
+    // public function dashboard()
+    // {
+    //     if (!$this->session->has('user')) {
+    //         return redirect()->to('/login');
+    //     }
+    //     $user_model = new UserModel();
+    //     $users = $user_model->findAll();
+    //     return view('dashboard', ['users' => $users]);
+    // }
+
     public function dashboard()
-    {
-        if (!$this->session->has('user')) {
-            return redirect()->to('/login');
-        }
-        $user_model = new UserModel();
-        $users = $user_model->findAll();
-        return view('dashboard', ['users' => $users]);
+{
+    if (!$this->session->has('user') && (!$this->session->has('token'))) {
+        return redirect()->to('/login');
     }
 
-//     public function dashboard()
-// {
-//     if (!$this->session->has('user')) {
-//         return redirect()->to('/login');
-//     }
+    // Fetch data from MySQL
+    $user_model = new UserModel();
+    $mysql_users = $user_model->findAll(); // MySQL data
 
-//     // Fetch data from MySQL
-//     $user_model = new UserModel();
-//     $mysql_users = $user_model->findAll(); // MySQL data
+    // Fetch data from Node.js (MongoDB)
+    $client = new Client();
+    $nodeApiUrl = 'http://localhost:3000/api/dashboard'; // Node.js API endpoint
 
-//     // Fetch data from Node.js (MongoDB)
-//     $client = new Client();
-//     $nodeApiUrl = 'http://localhost:5000/api/dashboard'; // Node.js API endpoint
+    try {
+        // print_r("response"); die;
+        $response = $client->get($nodeApiUrl, [
+            'headers' => [
+                'Accept' => 'application/json',
+                // Add any other required headers here
+            ]
+        ]);
+        if ($response->getStatusCode() === 200) {
+            $mongo_users = json_decode($response->getBody()->getContents(), true)['getUsers'] ?? [];
+        } else {
+            log_message('error', 'Node.js API returned status code: ' . $response->getStatusCode());
+            $mongo_users = [];
+        }
+    } catch (\Exception $e) {
+        // echo "<pre>";
+        // print_r($e); die;
+        // echo "<pre>";
+        log_message('error', 'Error fetching data from Node.js API: ' . $e->getMessage());
+        $mongo_users = [];
+    }
 
-//     try {
-//         $response = $client->get($nodeApiUrl);
-//         if ($response->getStatusCode() === 200) {
-//             // Decode JSON response as an associative array
-//             $mongo_users = json_decode($response->getBody()->getContents(), true)['getUsers'] ?? [];
-//         } else {
-//             $mongo_users = [];
-//         }
-//     } catch (\Exception $e) {
-//         $mongo_users = [];
-//     }
+    // Standardize data format for both sources
+    $combined_data = [];
 
-//     // Standardize data format for both sources
-//     $combined_data = [];
+    // Add MySQL users (check if $mysql_users is an array of objects or associative arrays)
+    foreach ($mysql_users as $user) {
+        if (is_object($user)) {
+            // If MySQL result is an object (stdClass), use object notation
+            $combined_data[] = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'source' => 'MySQL'
+            ];
+        } else {
+            // If MySQL result is an associative array, use array notation
+            $combined_data[] = [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'source' => 'MySQL'
+            ];
+        }
+    }
 
-//     // Add MySQL users (check if $mysql_users is an array of objects or associative arrays)
-//     foreach ($mysql_users as $user) {
-//         if (is_object($user)) {
-//             // If MySQL result is an object (stdClass), use object notation
-//             $combined_data[] = [
-//                 'id' => $user->id,
-//                 'name' => $user->name,
-//                 'email' => $user->email,
-//                 'source' => 'MySQL'
-//             ];
-//         } else {
-//             // If MySQL result is an associative array, use array notation
-//             $combined_data[] = [
-//                 'id' => $user['id'],
-//                 'name' => $user['name'],
-//                 'email' => $user['email'],
-//                 'source' => 'MySQL'
-//             ];
-//         }
-//     }
+    // Add MongoDB users
+    foreach ($mongo_users as $user) {
+        $combined_data[] = [
+            'id' => (string) $user['_id'], // MongoDB ID
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'source' => 'MongoDB'
+        ];
+    }
 
-//     // Add MongoDB users
-//     foreach ($mongo_users as $user) {
-//         $combined_data[] = [
-//             'id' => (string) $user['_id'], // MongoDB ID
-//             'name' => $user['name'],
-//             'email' => $user['email'],
-//             'source' => 'MongoDB'
-//         ];
-//     }
-
-//     // Pass combined data to the view
-//     return view('dashboard', ['users' => $combined_data]);
-// }
+    // Pass combined data to the view
+    return view('dashboard', ['users' => $combined_data]);
+}
 
     
     
@@ -159,7 +169,7 @@ class Home extends BaseController
                             if($response->getStatusCode() === 200){
                                 $userData = json_decode($response->getBody()->getContents(), true);
                                 $this->session->set("user", $userData['user']);
-                                // $this->session->set("token", $userData['token']);
+                                $this->session->set("token", $userData['token']);
                                 return redirect()->to('/dashboard')->with('success', 'Login successful!');
                             }else {
                                 return redirect()->back()->with('error', 'Invalid email or password. Please try again.');

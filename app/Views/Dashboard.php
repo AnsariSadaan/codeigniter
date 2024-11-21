@@ -20,27 +20,32 @@
                     <th class="px-4 py-2 text-left">ID</th>
                     <th class="px-4 py-2 text-left">Name</th>
                     <th class="px-4 py-2 text-left">Email</th>
+                    <th class="px-4 py-2 text-center">Source</th>
                     <th class="px-4 py-2 text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $row) { ?>
+                <?php foreach ($users as $row) { 
+                    // print_r($users); die;
+                    ?>
+
                     <tr class="border-b">
-                        <td class="px-4 py-2"><?php echo $row->id; ?></td>
-                        <td class="px-4 py-2"><?php echo $row->name; ?></td>
-                        <td class="px-4 py-2"><?php echo $row->email; ?></td>
+                        <td class="px-4 py-2"><?php echo $row['id']; ?></td>
+                        <td class="px-4 py-2"><?php echo $row['name']; ?></td>
+                        <td class="px-4 py-2"><?php echo $row['email']; ?></td>
+                        <td class="px-4 py-2"><?php echo  $row['source'] ?></td> <!-- Display the source, e.g., MySQL or MongoDB -->
                         <td class="px-4 py-2 text-center">
                             <!-- Edit Button with Data -->
                             <button 
                                 class="bg-blue-500 text-white py-1 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
-                                onclick="openEditModal(<?php echo $row->id; ?>, '<?php echo $row->name; ?>', '<?php echo $row->email; ?>')">
+                                onclick="openEditModal(<?php echo $row['id']; ?>, '<?php echo $row['name']; ?>', '<?php echo $row['email']; ?>')">
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </button>
 
                             <!-- Delete Button with Data -->
                             <button 
                                 class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-                                onclick="confirmDelete(<?php echo $row->id; ?>)">
+                                onclick="confirmDelete(<?php echo $row['id']; ?>)">
                                 <i class="fa-solid fa-trash"></i> Delete
                             </button>
                         </td>
