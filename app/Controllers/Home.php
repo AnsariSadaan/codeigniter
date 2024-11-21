@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
-
+use GuzzleHttp\Client;
 
 class Home extends BaseController
 {
@@ -21,9 +21,77 @@ class Home extends BaseController
         return view('dashboard', ['users' => $users]);
     }
 
+//     public function dashboard()
+// {
+//     if (!$this->session->has('user')) {
+//         return redirect()->to('/login');
+//     }
+
+//     // Fetch data from MySQL
+//     $user_model = new UserModel();
+//     $mysql_users = $user_model->findAll(); // MySQL data
+
+//     // Fetch data from Node.js (MongoDB)
+//     $client = new Client();
+//     $nodeApiUrl = 'http://localhost:5000/api/dashboard'; // Node.js API endpoint
+
+//     try {
+//         $response = $client->get($nodeApiUrl);
+//         if ($response->getStatusCode() === 200) {
+//             // Decode JSON response as an associative array
+//             $mongo_users = json_decode($response->getBody()->getContents(), true)['getUsers'] ?? [];
+//         } else {
+//             $mongo_users = [];
+//         }
+//     } catch (\Exception $e) {
+//         $mongo_users = [];
+//     }
+
+//     // Standardize data format for both sources
+//     $combined_data = [];
+
+//     // Add MySQL users (check if $mysql_users is an array of objects or associative arrays)
+//     foreach ($mysql_users as $user) {
+//         if (is_object($user)) {
+//             // If MySQL result is an object (stdClass), use object notation
+//             $combined_data[] = [
+//                 'id' => $user->id,
+//                 'name' => $user->name,
+//                 'email' => $user->email,
+//                 'source' => 'MySQL'
+//             ];
+//         } else {
+//             // If MySQL result is an associative array, use array notation
+//             $combined_data[] = [
+//                 'id' => $user['id'],
+//                 'name' => $user['name'],
+//                 'email' => $user['email'],
+//                 'source' => 'MySQL'
+//             ];
+//         }
+//     }
+
+//     // Add MongoDB users
+//     foreach ($mongo_users as $user) {
+//         $combined_data[] = [
+//             'id' => (string) $user['_id'], // MongoDB ID
+//             'name' => $user['name'],
+//             'email' => $user['email'],
+//             'source' => 'MongoDB'
+//         ];
+//     }
+
+//     // Pass combined data to the view
+//     return view('dashboard', ['users' => $combined_data]);
+// }
+
+    
+    
+
+
 
     public function signup()
-    
+
     {
         if ($this->session->has('user')) {
             return redirect()->to('/dashboard');
@@ -37,7 +105,22 @@ class Home extends BaseController
             ];
             $result = $user_model->save($data);
             if ($result) {
-                return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
+                $client = new Client();
+                $nodeApiUrl = 'http://localhost:3000/api/register';
+                try {
+                    $response = $client->post($nodeApiUrl, [
+                        'json' => [
+                            'name' => $data['name'],
+                            'email' => $data['email'],
+                            'password' => $this->request->getPost('password')
+                        ]
+                    ]);
+                    if ($response->getStatusCode() === 200) {
+                        return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
+                    }
+                } catch (\Exception $e) {
+                    return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
+                }
             } else {
                 return redirect()->back()->with('error', 'Failed to register. Please try again.');
             }
@@ -63,6 +146,27 @@ class Home extends BaseController
                     return redirect()->back()->with('error', 'Invalid password. Please try again.');
                 }
             } else {
+
+                $client = new Client();
+                $nodeApiUrl = 'http://localhost:3000/api/login';
+                try {
+                        $response = $client->post($nodeApiUrl, [
+                            'json'=> [
+                                'email'=>$email,
+                                'password'=>$password
+                            ]
+                            ]);
+                            if($response->getStatusCode() === 200){
+                                $userData = json_decode($response->getBody()->getContents(), true);
+                                $this->session->set("user", $userData['user']);
+                                // $this->session->set("token", $userData['token']);
+                                return redirect()->to('/dashboard')->with('success', 'Login successful!');
+                            }else {
+                                return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
+                            }
+                    } catch (\Exception $e) {
+                        return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
+                    }
                 return redirect()->back()->with('error', 'Invalid email. Please try again.');
             }
         }
@@ -73,7 +177,15 @@ class Home extends BaseController
 
     public function logout()
     {
+        // $this->session->remove('token');
         $this->session->remove('user');
+        $client = new Client();
+        $nodeApiUrl = 'http://localhost:3000/api/logout';
+        try {
+            $client->post($nodeApiUrl);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
+        }
         $this->session->setFlashdata('success', 'You have logged out successfully.');
         return redirect()->to('/login');
     }

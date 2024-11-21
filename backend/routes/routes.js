@@ -4,6 +4,8 @@ import userLogin from '../controller/userLogin.js';
 import authToken from '../middleware/authToken.js';
 import userLogout from '../controller/userLogout.js';
 import userDashboard from '../controller/usersDashboard.js';
+import userEdit from '../controller/userEdit.js';
+import userDelete from '../controller/userDelete.js';
 const router = express.Router();
 
 
@@ -11,4 +13,6 @@ router.post('/register', userRegister);
 router.post('/login', userLogin)
 router.post('/logout', authToken, userLogout);
 router.get('/dashboard', authToken, userDashboard);
+router.post('/update/:id', authToken, userEdit);
+router.delete('/delete/:id', authToken, userDelete);
 export default router;
