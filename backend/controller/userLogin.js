@@ -28,7 +28,7 @@ const userLogin = async (req ,res)=> {
                 secure: process.env.NODE_ENV === 'production',  // Only send cookie over HTTPS in production
             });
 
-            res.status(200).send({
+            res.status(200).json({
                 success: true,
                 message: "Login Successfully",
                 token: token,

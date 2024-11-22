@@ -27,14 +27,15 @@ import JWT from 'jsonwebtoken';
 const authToken = (req, res, next) => {
     try {
         // Get the token from the cookies
-        const token = req.cookies?.token //|| req.headers("Authorization")?.replace('Bearer ', "");  // Use req.cookies to access the token from the cookie
-
+        const token = req.cookies?.token || req.header("Authorization")?.replace('Bearer ', "");  // Use req.cookies to access the token from the cookie
+        // console.log(token)
         if (!token) {
             return res.status(401).json({ message: "Please log in" });
         }
 
         // Verify the token
         JWT.verify(token, process.env.TOKEN_SECRET_KEY, (err, decoded) => {
+            // console.log(decoded)
             if (err) {
                 return res.status(403).json({ message: "Invalid or expired token" });
             }

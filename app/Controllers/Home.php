@@ -11,89 +11,47 @@ class Home extends BaseController
     {
         return view('login');
     }
-    // public function dashboard()
-    // {
-    //     if (!$this->session->has('user')) {
-    //         return redirect()->to('/login');
-    //     }
-    //     $user_model = new UserModel();
-    //     $users = $user_model->findAll();
-    //     return view('dashboard', ['users' => $users]);
-    // }
-
     public function dashboard()
-{
-    if (!$this->session->has('user') && (!$this->session->has('token'))) {
-        return redirect()->to('/login');
-    }
-
-    // Fetch data from MySQL
-    $user_model = new UserModel();
-    $mysql_users = $user_model->findAll(); // MySQL data
-
-    // Fetch data from Node.js (MongoDB)
-    $client = new Client();
-    $nodeApiUrl = 'http://localhost:3000/api/dashboard'; // Node.js API endpoint
-
-    try {
-        // print_r("response"); die;
-        $response = $client->get($nodeApiUrl, [
-            // 'headers' => [
-            //     'Accept' => 'application/json',
-            //     // 'Authorization' => 'Bearer ' . $this->session->get('token')
-            // ]
-        ]);
-        if ($response->getStatusCode() === 200) {
-            $mongo_users = json_decode($response->getBody()->getContents(), true)['getUsers'] ?? [];
-        } else {
-            log_message('error', 'Node.js API returned status code: ' . $response->getStatusCode());
-            $mongo_users = [];
+    {
+        if (!$this->session->has('user') && !$this->session->has('token')) {
+            return redirect()->to('/login');
         }
-    } catch (\Exception $e) {
-        // echo "<pre>";
-        // print_r($e); die;
-        // echo "<pre>";
-        log_message('error', 'Error fetching data from Node.js API: ' . $e->getMessage());
-        $mongo_users = [];
-    }
 
-    // Standardize data format for both sources
-    $combined_data = [];
+        $user_model = new UserModel();
+        $users = $user_model->findAll();
 
-    // Add MySQL users (check if $mysql_users is an array of objects or associative arrays)
-    foreach ($mysql_users as $user) {
-        if (is_object($user)) {
-            // If MySQL result is an object (stdClass), use object notation
-            $combined_data[] = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'source' => 'MySQL'
-            ];
-        } else {
-            // If MySQL result is an associative array, use array notation
-            $combined_data[] = [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'source' => 'MySQL'
-            ];
+        try {
+            $client = new Client();
+            $response = $client->get('http://localhost:3000/api/dashboard', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->session->get('token')
+                ]
+            ]);
+            if ($response->getStatusCode() === 200) {
+                $mongo_users = json_decode($response->getBody()->getContents());
+                // echo "<pre>";
+                // print_r($mongo_users); die;
+                // echo "</pre>";
+                for ($i = 0; $i < count($users); $i++) {
+                    if ($mongo_users->getUsers[$i]->email === $users[$i]->email) {
+                        $users[$i]->mongoId = $mongo_users->getUsers[$i]->_id;
+                    }
+                }
+                // echo "<pre>";
+                // print_r($users); die;
+                // echo "</pre>";
+                return view('dashboard', ['users' => $users]);
+            } else {
+                log_message('error', 'Node.js API returned status code: ' . $response->getStatusCode());
+                $mongo_users = [];
+            }
+        } catch (\Throwable $e) {
+            echo "unable to get data from mongo";
+            throw $e;
         }
     }
 
-    // Add MongoDB users
-    foreach ($mongo_users as $user) {
-        $combined_data[] = [
-            'id' => (string) $user['_id'], // MongoDB ID
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'source' => 'MongoDB'
-        ];
-    }
-
-    // Pass combined data to the view
-    return view('dashboard', ['users' => $combined_data]);
-}
 
     public function signup()
     {
@@ -117,11 +75,11 @@ class Home extends BaseController
                             'name' => $data['name'],
                             'email' => $data['email'],
                             'password' => $this->request->getPost('password')
-                            ]
-                        ]);
-                        if ($response->getStatusCode() === 200) {
-                            return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
-                        }
+                        ]
+                    ]);
+                    if ($response->getStatusCode() === 200) {
+                        return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
+                    }
                 } catch (\Exception $e) {
                     return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
                 }
@@ -132,17 +90,71 @@ class Home extends BaseController
         return view('signup');
     }
 
+    // public function login()
+    // {
+    //     if ($this->session->has('user')) {
+    //         return redirect()->to('/dashboard');
+    //     }
+    //     if (isset($_POST['email'])) {
+    //         $user_model = new UserModel();
+    //         $email = $this->request->getPost('email');
+    //         $password = $this->request->getPost('password');
+    //         $user = $user_model->where('email', $email)->first();
+    //         if ($user) {
+    //             if (password_verify($password, $user->password)) {
+    //                 $this->session->set("user", $user);
+    //                 return redirect()->to('/dashboard')->with('success', 'Login successful!');
+    //             } else {
+    //                 return redirect()->back()->with('error', 'Invalid password. Please try again.');
+    //             }
+    //         } else {
+
+    //             $client = new Client();
+    //             $nodeApiUrl = 'http://localhost:3000/api/login';
+    //             try {
+    //                     $response = $client->post($nodeApiUrl, [
+    //                         'json'=> [
+    //                             'email'=>$email,
+    //                             'password'=>$password
+    //                         ]
+    //                         ]);
+
+    //                         print_r($response);
+
+    //                         if($response->getStatusCode() === 200){
+    //                             $userData = json_decode($response->getBody()->getContents(), true);
+    //                             // print_r( $userData); die;
+    //                             // $this->session->set("user", $userData['user']);
+    //                             $this->session->set("token", $userData->token);
+    //                             print_r($this->session->get('token')); die;
+    //                             // print_r($response); die;
+    //                             return redirect()->to('/dashboard')->with('success', 'Login successful!');
+    //                         }else {
+    //                             return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
+    //                         }
+    //                 } catch (\Exception $e) {
+    //                     echo $e;
+    //                     // return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
+    //                 }
+    //             return redirect()->back()->with('error', 'Invalid email. Please try again.');
+    //         }
+    //     }
+    //     return view('login');
+    // }
+
     public function login()
     {
         if ($this->session->has('user')) {
             return redirect()->to('/dashboard');
         }
+
         if (isset($_POST['email'])) {
             $user_model = new UserModel();
             $email = $this->request->getPost('email');
             $password = $this->request->getPost('password');
             $user = $user_model->where('email', $email)->first();
-            if ($user) {
+            $token = $this->request->getPost('token');
+            if ($user && $token) {
                 if (password_verify($password, $user->password)) {
                     $this->session->set("user", $user);
                     return redirect()->to('/dashboard')->with('success', 'Login successful!');
@@ -150,35 +162,46 @@ class Home extends BaseController
                     return redirect()->back()->with('error', 'Invalid password. Please try again.');
                 }
             } else {
-
                 $client = new Client();
                 $nodeApiUrl = 'http://localhost:3000/api/login';
+
                 try {
-                        $response = $client->post($nodeApiUrl, [
-                            'json'=> [
-                                'email'=>$email,
-                                'password'=>$password
-                            ]
-                            ]);
-                            
-                            if($response->getStatusCode() === 200){
-                                $userData = json_decode($response->getBody()->getContents(), true);
-                                $this->session->set("user", $userData['user']);
-                                $this->session->set("token", $userData['token']);
-                                print_r($response); die;
-                                return redirect()->to('/dashboard')->with('success', 'Login successful!');
-                            }else {
-                                return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
-                            }
-                    } catch (\Exception $e) {
-                        return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
+                    // Sending email and password to Node.js API
+                    $response = $client->post($nodeApiUrl, [
+                        'json' => [
+                            'email' => $email,
+                            'password' => $password
+                        ]
+                    ]);
+
+                    // Check if response was successful
+                    if ($response->getStatusCode() === 200) {
+                        // Decode the response body into an array
+                        $userData = json_decode($response->getBody()->getContents(), true);
+
+                        // Check if the token exists in the response
+                        if (isset($userData['token'])) {
+                            // Set the token in the session
+                            $this->session->set("token", $userData['token']);  // Correct token access
+                            // Set the user data in the session
+                            $this->session->set("user", $userData['user']);
+                        } else {
+                            return redirect()->back()->with('error', 'Token not received from Node.js API.');
+                        }
+
+                        // Redirect to the dashboard with success message
+                        return redirect()->to('/dashboard')->with('success', 'Login successful!');
+                    } else {
+                        return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
                     }
-                return redirect()->back()->with('error', 'Invalid email. Please try again.');
+                } catch (\Exception $e) {
+                    return redirect()->back()->with('error', 'Error connecting to node.js server: ' . $e->getMessage());
+                }
             }
         }
+
         return view('login');
     }
-
 
 
     public function logout()
@@ -203,20 +226,52 @@ class Home extends BaseController
 
         // Get the submitted data
         $id = $this->request->getPost('id');
+        $mongoId = $this->request->getPost('mongoId');
+        // print( $mongoId) ; die;// Get MongoDB ID from form
         $name = $this->request->getPost('name');
         $email = $this->request->getPost('email');
 
-        // Prepare data for update
+        // Prepare data for update in MySQL
         $updatedData = [];
         if ($name) $updatedData['name'] = $name;
         if ($email) $updatedData['email'] = $email;
 
-        // Update the user in the database
-        $user_model->update($id, $updatedData);
+        // Step 1: Update the user in MySQL
+        $result = $user_model->update($id, $updatedData);
 
-        // Redirect to the dashboard with a success message
-        return redirect()->to('/dashboard')->with('success', 'User updated successfully!');
+        if ($result) {
+            // Step 2: If MySQL update is successful, update MongoDB via Node.js API
+            try {
+                $client = new Client();
+
+                // Send the POST request to the Node.js API to update MongoDB
+                $response = $client->post('http://localhost:3000/api/update', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $this->session->get('token'),
+                    ],
+                    'json' => [
+                        'id' => $mongoId,  // MongoDB ID
+                        'name' => $name,
+                        'email' => $email
+                    ]
+                ]);
+                return view('/dashboard');
+            } catch (\Exception $e) {
+                // echo "<pre>";
+                // print_r($e); die;
+                // echo "</pre>";
+                // echo "unable to update mongoDB";
+                return redirect()->to('/dashboard')->with('error', 'Unable to edit the MongoDB data');
+            }
+        } else {
+            // If MySQL update fails
+            return redirect()->to('/dashboard')->with('error', 'Failed to update the user data in the database!');
+        }
     }
+
+
+
 
     public function deleteUser($id)
     {

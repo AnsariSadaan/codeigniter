@@ -13,6 +13,6 @@ router.post('/register', userRegister);
 router.post('/login', userLogin)
 router.post('/logout', authToken, userLogout);
 router.get('/dashboard', userDashboard);
-router.post('/update/:id', authToken, userEdit);
+router.post('/update', authToken, userEdit);
 router.delete('/delete/:id', authToken, userDelete);
 export default router;
