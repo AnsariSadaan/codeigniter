@@ -14,5 +14,5 @@ router.post('/login', userLogin)
 router.post('/logout', authToken, userLogout);
 router.get('/dashboard', userDashboard);
 router.post('/update', authToken, userEdit);
-router.delete('/delete/:id', authToken, userDelete);
+router.delete('/delete', authToken, userDelete);
 export default router;

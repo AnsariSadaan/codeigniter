@@ -30,17 +30,11 @@ class Home extends BaseController
             ]);
             if ($response->getStatusCode() === 200) {
                 $mongo_users = json_decode($response->getBody()->getContents());
-                // echo "<pre>";
-                // print_r($mongo_users); die;
-                // echo "</pre>";
                 for ($i = 0; $i < count($users); $i++) {
                     if ($mongo_users->getUsers[$i]->email === $users[$i]->email) {
                         $users[$i]->mongoId = $mongo_users->getUsers[$i]->_id;
                     }
                 }
-                // echo "<pre>";
-                // print_r($users); die;
-                // echo "</pre>";
                 return view('dashboard', ['users' => $users]);
             } else {
                 log_message('error', 'Node.js API returned status code: ' . $response->getStatusCode());
@@ -77,9 +71,7 @@ class Home extends BaseController
                             'password' => $this->request->getPost('password')
                         ]
                     ]);
-                    if ($response->getStatusCode() === 200) {
-                        return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
-                    }
+                    return redirect()->to('/login')->with('success', 'Registration successful! Please log in.');
                 } catch (\Exception $e) {
                     return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
                 }
@@ -90,57 +82,6 @@ class Home extends BaseController
         return view('signup');
     }
 
-    // public function login()
-    // {
-    //     if ($this->session->has('user')) {
-    //         return redirect()->to('/dashboard');
-    //     }
-    //     if (isset($_POST['email'])) {
-    //         $user_model = new UserModel();
-    //         $email = $this->request->getPost('email');
-    //         $password = $this->request->getPost('password');
-    //         $user = $user_model->where('email', $email)->first();
-    //         if ($user) {
-    //             if (password_verify($password, $user->password)) {
-    //                 $this->session->set("user", $user);
-    //                 return redirect()->to('/dashboard')->with('success', 'Login successful!');
-    //             } else {
-    //                 return redirect()->back()->with('error', 'Invalid password. Please try again.');
-    //             }
-    //         } else {
-
-    //             $client = new Client();
-    //             $nodeApiUrl = 'http://localhost:3000/api/login';
-    //             try {
-    //                     $response = $client->post($nodeApiUrl, [
-    //                         'json'=> [
-    //                             'email'=>$email,
-    //                             'password'=>$password
-    //                         ]
-    //                         ]);
-
-    //                         print_r($response);
-
-    //                         if($response->getStatusCode() === 200){
-    //                             $userData = json_decode($response->getBody()->getContents(), true);
-    //                             // print_r( $userData); die;
-    //                             // $this->session->set("user", $userData['user']);
-    //                             $this->session->set("token", $userData->token);
-    //                             print_r($this->session->get('token')); die;
-    //                             // print_r($response); die;
-    //                             return redirect()->to('/dashboard')->with('success', 'Login successful!');
-    //                         }else {
-    //                             return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
-    //                         }
-    //                 } catch (\Exception $e) {
-    //                     echo $e;
-    //                     // return redirect()->back()->with('error', 'Error connecting to node.js server', $e->getMessage());
-    //                 }
-    //             return redirect()->back()->with('error', 'Invalid email. Please try again.');
-    //         }
-    //     }
-    //     return view('login');
-    // }
 
     public function login()
     {
@@ -273,14 +214,44 @@ class Home extends BaseController
 
 
 
-    public function deleteUser($id)
+
+    public function deleteUser($id, $mongoId)
     {
         $user_model = new UserModel();
 
-        // Delete the user from the database
-        $user_model->delete($id);
+        // Delete the user from the relational database (MySQL, etc.)
+        $result = $user_model->delete($id);
 
-        // Redirect to the dashboard with a success message
-        return redirect()->to('/dashboard')->with('success', 'User deleted successfully!');
+        if ($result) {
+            try {
+                // Send DELETE request to your Node.js backend to delete from MongoDB
+                $client = new Client();
+                $response = $client->delete('http://localhost:3000/api/delete', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $this->session->get('token'),
+                    ],
+                    'json' => [
+                        '_id' => $mongoId,  // MongoDB ID to be deleted
+                    ]
+                ]);
+
+                // Check if the MongoDB delete was successful
+                $responseData = json_decode($response->getBody()->getContents(), true);
+                if (isset($responseData['message']) && $responseData['message'] == 'User deleted successfully') {
+                    // Success
+                    return redirect()->to('/dashboard')->with('success', 'User deleted successfully!');
+                } else {
+                    // If MongoDB deletion failed, you can either handle that or inform the user.
+                    return redirect()->to('/dashboard')->with('error', 'Error deleting user from MongoDB.');
+                }
+            } catch (\Exception $e) {
+                // Handle error
+                return redirect()->to('/dashboard')->with('error', 'Error deleting user from MongoDB: ' . $e->getMessage());
+            }
+        } else {
+            // If deleting from MySQL failed
+            return redirect()->to('/dashboard')->with('error', 'Error deleting user from database.');
+        }
     }
 }

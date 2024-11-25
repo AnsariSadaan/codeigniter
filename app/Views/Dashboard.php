@@ -13,7 +13,11 @@
 
     <!-- Dashboard Table Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
-        <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">User Dashboard</h1>
+        <!-- Logout Link -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-semibold text-center text-gray-800">User Dashboard</h1>
+            <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 inline-block">Logout</a>
+        </div>
 
         <!-- Table Start -->
         <table class="min-w-full table-auto border-collapse">
@@ -47,7 +51,7 @@
                             <!-- Delete Button with Data -->
                             <button
                                 class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-                                onclick="confirmDelete(<?php echo $row->id; ?>)">
+                                onclick="confirmDelete(<?php echo $row->id; ?>, '<?php echo $row->mongoId; ?>')">
                                 <i class="fa-solid fa-trash"></i> Delete
                             </button>
                         </td>
@@ -57,8 +61,7 @@
         </table>
         <!-- Table End -->
 
-        <!-- Logout Link -->
-        <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 mt-4 inline-block">Logout</a>
+
     </div>
 
     <!-- Edit User Modal -->
@@ -106,10 +109,10 @@
         }
 
         // Confirm deletion and send delete request
-        function confirmDelete(id) {
+        function confirmDelete(id, mongoId) {
             if (confirm('Are you sure you want to delete this user?')) {
                 // Send DELETE request to backend
-                window.location.href = '/delete-user/' + id;
+                window.location.href = '/delete-user/' + id + '/' + mongoId;
             }
         }
     </script>
