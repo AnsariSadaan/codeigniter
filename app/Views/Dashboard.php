@@ -14,9 +14,24 @@
     <!-- Dashboard Table Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <!-- Logout Link -->
+        <h1 class="text-3xl font-semibold text-center text-gray-800">User Dashboard</h1>
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-semibold text-center text-gray-800">User Dashboard</h1>
-            <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 inline-block">Logout</a>
+            <input type="search" id="searchInput" onkeyup="filterTable()" placeholder="Search" class="px-4 py-1 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-lg outline-none">
+            <div>
+                <!-- <label for="education" class="bg-yellow-800 rounded-lg px-3 py-1">Filter</label> -->
+                <select name="education" id="education" class="bg-indigo-600 text-white px-2 py-1 rounded-lg outline-none">
+                    <option class="bg-white text-black" value="be">BE</option>
+                    <option class="bg-white text-black" value="bcom">B-COM</option>
+                    <option class="bg-white text-black" value="bsc">BSC</option>
+                    <option class="bg-white text-black" value="bscit">BSC-IT</option>
+                    <option class="bg-white text-black" value="btech">B-TECH</option>
+                </select>
+                <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 inline-block">Logout</a>
+                <!-- <a onclick="dowloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block"><i class="fa-solid fa-download"></i></a> -->
+                <a href="javascript:void(0)" onclick="downloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">
+                <i class="fa-solid fa-download"></i>
+            </a>
+            </div>
         </div>
 
         <!-- Table Start -->
@@ -45,14 +60,14 @@
                             <button
                                 class="bg-blue-500 text-white py-1 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
                                 onclick="openEditModal(<?php echo $row->id; ?>, '<?php echo $row->name; ?>', '<?php echo $row->email; ?>', '<?php echo $row->mongoId; ?>')">
-                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </button>
 
                             <!-- Delete Button with Data -->
                             <button
                                 class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                                 onclick="confirmDelete(<?php echo $row->id; ?>, '<?php echo $row->mongoId; ?>')">
-                                <i class="fa-solid fa-trash"></i> Delete
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>
@@ -60,7 +75,35 @@
             </tbody>
         </table>
         <!-- Table End -->
+        <h1 id="noDataMessage" class="text-xl text-center text-gray-500 hidden">No Data Found</h1>
 
+        <!-- pagination start -->
+        <div class="flex justify-center mt-6">
+            <nav aria-label="Page navigation example">
+                <ul class="inline-flex -space-x-px">
+                    <?php if ($currentPage > 1): ?>
+                        <li>
+                            <a href="/dashboard?page=<?php echo $currentPage - 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">Previous</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <li>
+                            <a href="/dashboard?page=<?php echo $i; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900 <?php echo ($i == $currentPage) ? 'font-bold' : ''; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <?php if ($currentPage < $totalPages): ?>
+                        <li>
+                            <a href="/dashboard?page=<?php echo $currentPage + 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">Next</a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
+        </div>
+        <!-- pagination end -->
 
     </div>
 
@@ -75,7 +118,7 @@
                 </div>
                 <div class="mb-4 hidden">
                     <label for="editmongoId" class="block text-gray-700">mongoId</label>
-                    <input type="text" name="mongoId" id="editmongoId" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                    <input type="text" name="mongoId" id="editmongoId" class="w-full p-2 border border-gray-300 rounded mt-2" readonly>
                 </div>
                 <div class="mb-4">
                     <label for="editName" class="block text-gray-700">Name</label>
@@ -94,6 +137,79 @@
     </div>
 
     <script>
+        function downloadData() {
+            const tableBody = document.querySelector('table tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            const csvRows = [];
+
+            // Get table headers
+            const header = document.querySelector('table thead');
+            const headers = header.querySelectorAll('th');
+            const headerRow = [];
+            headers.forEach(headerCell => {
+                headerRow.push(headerCell.innerText);
+            });
+            csvRows.push(headerRow.join(',')); // Add header row to CSV
+
+            // Loop through each row and extract data
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = [];
+                cells.forEach(cell => {
+                    rowData.push(cell.innerText); // Extract cell text
+                });
+                csvRows.push(rowData.join(',')); // Join row data with commas
+            });
+
+            // Convert to CSV string
+            const csvData = csvRows.join('\n');
+
+            // Create a Blob with CSV data
+            const blob = new Blob([csvData], {
+                type: 'text/csv'
+            });
+
+            // Create a temporary link to trigger download
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'users_data.csv'; // Filename for download
+
+            // Programmatically click the link to trigger the download
+            link.click();
+        }
+
+        function filterTable() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            const tableBody = document.querySelector('table tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            let found = false;
+
+            rows.forEach(function(row) {
+                const nameCell = row.querySelector('td:nth-child(3)');
+                const emailCell = row.querySelector('td:nth-child(4)');
+
+                if (nameCell) { // Make sure nameCell exists
+                    const name = nameCell.textContent.toLowerCase();
+                    const email = emailCell.textContent.toLowerCase();
+                    if ((name.indexOf(searchQuery) > -1) || (email.indexOf(searchQuery) > -1)) {
+                        row.style.display = '';
+                        found = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            // If no row is found, display "No Data Found" message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (found) {
+                noDataMessage.classList.add('hidden'); // Hide "No Data Found" message
+            } else {
+                noDataMessage.classList.remove('hidden'); // Show "No Data Found" message
+            }
+        }
+
+
         // Open the edit modal and pre-fill the form
         function openEditModal(id, name, email, mongoId) {
             document.getElementById('editId').value = id;
