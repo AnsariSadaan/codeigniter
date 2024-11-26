@@ -1,27 +1,3 @@
-// import {JWT} from 'jsonwebtoken';
-
-// const authToken = async (req,res, next)=> {
-//     try {
-//         const token = req.headers.authorization?.split(' ')[1];
-//         if(!token){
-//             return res.json({message: "please Login"})
-//         }
-//         JWT.verify(token, process.env.TOKEN_SECRET_KEY, (err,decoded)=> {
-//             if(err){
-//                 console.log("error auth", err)
-//             }
-//             req.userId = decoded?._id;
-//             next();
-//         });
-//     } catch (error) {
-//         console.log(error)
-//         res.status(400).json({message: "Internal Server Error"});
-//     }
-// }
-
-
-// export default authToken;
-
 import JWT from 'jsonwebtoken';
 
 const authToken = (req, res, next) => {

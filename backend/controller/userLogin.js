@@ -11,8 +11,6 @@ const userLogin = async (req ,res)=> {
         if(!password){
             return res.status(422).json({message: "please enter password"})
         }
-       
-
         const user = await User.findOne({email});
         if(!user){
             return res.status(422).json({message: "Please Enter Password", error: true});
@@ -37,7 +35,6 @@ const userLogin = async (req ,res)=> {
                     name: user.name,
                     email: user.email,
                 }
-                
             });
     } catch (error) {
         res.status(500).json({message: "Internal Server Error", error: error.message})
