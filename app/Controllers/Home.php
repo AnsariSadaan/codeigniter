@@ -169,6 +169,8 @@ class Home extends BaseController
             $user_model = new UserModel();
             $data = [
                 'name' => $this->request->getPost('name'),
+                'age' => $this->request->getPost('age'),
+                'qualification' => $this->request->getPost('qualification'),
                 'email' => $this->request->getPost('email'),
                 'password' => password_hash($this->request->getPost('password'), PASSWORD_BCRYPT)
             ];
@@ -180,6 +182,8 @@ class Home extends BaseController
                     $response = $client->post($nodeApiUrl, [
                         'json' => [
                             'name' => $data['name'],
+                            'age' => $data['age'],
+                            'qualification' => $data['qualification'],
                             'email' => $data['email'],
                             'password' => $this->request->getPost('password')
                         ]
@@ -283,11 +287,16 @@ class Home extends BaseController
         $mongoId = $this->request->getPost('mongoId');
         // print( $mongoId) ; die;// Get MongoDB ID from form
         $name = $this->request->getPost('name');
+        $age = $this->request->getPost('age');
+        $qualification = $this->request->getPost('qualification');
+        var_dump($qualification);
         $email = $this->request->getPost('email');
 
         // Prepare data for update in MySQL
         $updatedData = [];
         if ($name) $updatedData['name'] = $name;
+        if ($age) $updatedData['age'] = $age;
+        if ($qualification) $updatedData['qualification'] = $qualification;
         if ($email) $updatedData['email'] = $email;
 
         // Step 1: Update the user in MySQL
@@ -307,6 +316,8 @@ class Home extends BaseController
                     'json' => [
                         'id' => $mongoId,  // MongoDB ID
                         'name' => $name,
+                        'age' => $age,
+                        'qualification' => $qualification,
                         'email' => $email
                     ]
                 ]);

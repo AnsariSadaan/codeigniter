@@ -31,8 +31,10 @@ const userLogin = async (req ,res)=> {
                 message: "Login Successfully",
                 token: token,
                 user: {
-                    _id: user._id,
+                    _id: user._id,    
                     name: user.name,
+                    age: user.age,
+                    qualification: user.qualification,
                     email: user.email,
                 }
             });

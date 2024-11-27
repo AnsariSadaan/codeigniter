@@ -6,7 +6,18 @@ const userSchema = new mongoose.Schema({
         required: true,
         lowercase: true,
         trim: true
-    }, 
+    },
+    age: {
+        type: Number,
+        trim: true,
+        lowercase: true,
+        required: true
+    },
+    qualification: {
+        type: String,
+        required: true,
+        trim: true,
+    },
     email: {
         type: String,
         required: true,

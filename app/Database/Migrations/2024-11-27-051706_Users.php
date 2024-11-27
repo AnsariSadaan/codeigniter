@@ -20,6 +20,14 @@ class Users extends Migration
                 'type' => 'VARCHAR',
                 'constraint' => 255,
             ],
+            'age' => [
+                'type' => 'INT',
+                'constraint' => 5,
+            ],
+            'qualification' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+            ],
             'email' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
@@ -38,3 +46,5 @@ class Users extends Migration
         $this->forge->dropTable('users');
     }
 }
+
+?>

@@ -7,10 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" integrity="sha512-9xKTRVabjVeZmc+GUW8GgSmcREDunMM+Dt/GrzchfN8tkwHizc5RP4Ok/MXFFy5rIjJjzhndFScTceq5e6GvVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Dashboard</title>
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script> -->
 </head>
-
 <body class="bg-gray-100 flex justify-center items-center h-screen">
-
     <!-- Dashboard Table Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <!-- Logout Link -->
@@ -19,28 +21,33 @@
             <input type="search" id="searchInput" onkeyup="filterTable()" placeholder="Search" class="px-4 py-1 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-lg outline-none">
             <div>
                 <!-- <label for="education" class="bg-yellow-800 rounded-lg px-3 py-1">Filter</label> -->
-                <select name="education" id="education" class="bg-indigo-600 text-white px-2 py-1 rounded-lg outline-none">
+                <select name="qualification" onchange="filterByQualification()" id="qualification" class="bg-indigo-600 text-white px-2 py-1 rounded-lg outline-none">
+
+                    <option class="bg-white text-black" value="">All</option>
                     <option class="bg-white text-black" value="be">BE</option>
-                    <option class="bg-white text-black" value="bcom">B-COM</option>
+                    <option class="bg-white text-black" value="bcom">BCOM</option>
                     <option class="bg-white text-black" value="bsc">BSC</option>
                     <option class="bg-white text-black" value="bscit">BSC-IT</option>
+                    <option class="bg-white text-black" value="mscit">MS-CIT</option>
                     <option class="bg-white text-black" value="btech">B-TECH</option>
                 </select>
                 <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 inline-block">Logout</a>
                 <!-- <a onclick="dowloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block"><i class="fa-solid fa-download"></i></a> -->
                 <a href="javascript:void(0)" onclick="downloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">
-                <i class="fa-solid fa-download"></i>
-            </a>
+                    <i class="fa-solid fa-download"></i>
+                </a>
             </div>
         </div>
 
         <!-- Table Start -->
-        <table class="min-w-full table-auto border-collapse">
+        <table class="min-w-full table-auto border-collapse" id='myTable'>
             <thead>
                 <tr class="bg-indigo-600 text-white">
                     <th class="px-4 py-2 text-left">ID</th>
-                    <th class="px-4 py-2 text-left">MongoId</th>
+                    <th class="px-4 py-2 text-left hidden">MongoId</th>
                     <th class="px-4 py-2 text-left">Name</th>
+                    <th class="px-4 py-2 text-left">Age</th>
+                    <th class="px-4 py-2 text-left">Qualification</th>
                     <th class="px-4 py-2 text-left">Email</th>
                     <th class="px-4 py-2 text-center">Actions</th>
                 </tr>
@@ -52,14 +59,16 @@
 
                     <tr class="border-b">
                         <td class="px-4 py-2"><?php echo $row->id; ?></td>
-                        <td class="px-4 py-2"><?php echo $row->mongoId; ?></td>
+                        <td class="px-4 py-2 hidden"><?php echo $row->mongoId; ?></td>
                         <td class="px-4 py-2"><?php echo $row->name; ?></td>
+                        <td class="px-4 py-2"><?php echo $row->age; ?></td>
+                        <td class="px-4 py-2"><?php echo $row->qualification; ?></td>
                         <td class="px-4 py-2"><?php echo $row->email; ?></td>
                         <td class="px-4 py-2 text-center">
                             <!-- Edit Button with Data -->
                             <button
                                 class="bg-blue-500 text-white py-1 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
-                                onclick="openEditModal(<?php echo $row->id; ?>, '<?php echo $row->name; ?>', '<?php echo $row->email; ?>', '<?php echo $row->mongoId; ?>')">
+                                onclick="openEditModal(<?php echo $row->id; ?>, '<?php echo $row->name; ?>', '<?php echo $row->age; ?>', '<?php echo $row->qualification; ?>', '<?php echo $row->email; ?>', '<?php echo $row->mongoId; ?>')">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
 
@@ -124,6 +133,17 @@
                     <label for="editName" class="block text-gray-700">Name</label>
                     <input type="text" name="name" id="editName" class="w-full p-2 border border-gray-300 rounded mt-2" required>
                 </div>
+
+                <div class="mb-4">
+                    <label for="editAge" class="block text-gray-700">Age</label>
+                    <input type="text" name="age" id="editAge" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="editQualification" class="block text-gray-700">Qualification</label>
+                    <input type="text" name="qualification" id="editQualification" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                </div>
+
                 <div class="mb-4">
                     <label for="editEmail" class="block text-gray-700">Email</label>
                     <input type="email" name="email" id="editEmail" class="w-full p-2 border border-gray-300 rounded mt-2" required>
@@ -137,6 +157,33 @@
     </div>
 
     <script>
+        function filterByQualification() {
+            const selectedQualification = document.getElementById('qualification').value.toLowerCase().trim();
+            const tableBody = document.querySelector('table tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(function(row) {
+        const qualificationCell = row.querySelector('td:nth-child(5)'); // Adjust the index if the column order changes
+
+        if (qualificationCell) {
+            const qualification = qualificationCell.textContent.toLowerCase();
+            if (selectedQualification === "" || qualification === selectedQualification) {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+        }
+    });
+
+    // Update the "No Data Found" message visibility
+    const noDataMessage = document.getElementById('noDataMessage');
+    const visibleRows = Array.from(rows).some(row => row.style.display !== 'none');
+    if (visibleRows) {
+        noDataMessage.classList.add('hidden');
+    } else {
+        noDataMessage.classList.remove('hidden');
+    }
+}
+
         function downloadData() {
             const tableBody = document.querySelector('table tbody');
             const rows = tableBody.querySelectorAll('tr');
@@ -211,9 +258,11 @@
 
 
         // Open the edit modal and pre-fill the form
-        function openEditModal(id, name, email, mongoId) {
+        function openEditModal(id, name, age, qualification, email, mongoId) {
             document.getElementById('editId').value = id;
             document.getElementById('editName').value = name;
+            document.getElementById('editAge').value = age;
+            document.getElementById('editQualification').value = qualification;
             document.getElementById('editEmail').value = email;
             document.getElementById('editmongoId').value = mongoId;
             document.getElementById('editModal').classList.remove('hidden');
@@ -232,7 +281,12 @@
             }
         }
     </script>
-
+    <!-- <script>
+        $(document).ready(function() {
+            $('#myTable').DataTable();
+        })
+    </script>
+    <script src="https://cdn.datatables.net/2.1.8/js/jquery.dataTables.min.js"></script> -->
 </body>
 
 </html>

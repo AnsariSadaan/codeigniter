@@ -3,11 +3,16 @@ import bcryptjs from 'bcryptjs';
 
 const userRegister = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, age, qualification, email, password } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
-
+    if(!age){
+      return res.status(400).json({ message: "Age is required" });
+    }
+    if(!qualification){
+      return res.status(400).json({ message: "Qualification is required" });
+    }
     if (!email) {
       return res.status(400).json({ message: "email is required" });
     }

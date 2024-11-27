@@ -1,25 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="<?= base_url() ?>css/styles.css?v=1.0">
     <title>Sign Up</title>
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center h-screen">
 
     <!-- Signup Form Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Sign Up</h1>
-        
+
         <!-- Form Start -->
         <form action="<?= base_url("/signup") ?>" method="post">
-            
+
             <!-- Name Field -->
             <div class="mb-4">
                 <label for="name" class="block text-gray-700 text-sm font-semibold mb-2">Name:</label>
                 <input type="text" id="name" name="name" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your name" required>
             </div>
+
+            <!-- age Field -->
+            <div class="mb-4">
+                <label for="age" class="block text-gray-700 text-sm font-semibold mb-2">Age:</label>
+                <input type="number" id="age" name="age" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your name" required>
+            </div>
+
+            <!-- qualification Field -->
+            <div class="mb-4">
+                <label for="qualification" class="block text-gray-700 text-sm font-semibold mb-2">Qualification:</label>
+                <input type="text" id="qualification" name="qualification" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your name" required>
+            </div>
+
 
             <!-- Email Field -->
             <div class="mb-4">
@@ -48,4 +63,5 @@
     <!-- Signup Form Container End -->
 
 </body>
+
 </html>
