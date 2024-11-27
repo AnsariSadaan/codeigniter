@@ -11,9 +11,14 @@
 
 <body class="bg-gray-100 flex justify-center items-center h-screen">
     <!-- Dashboard Table Container -->
+
+    
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <!-- Logout Link -->
         <h1 class="text-3xl font-semibold text-center text-gray-800">User Dashboard</h1>
+        <h1>CSV data upload</h1>
+        <input type="file" >
+        <button class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">Upload</button>
         <div class="flex justify-between items-center mb-6">
             <input type="search" id="searchInput" onkeyup="filterTable()" placeholder="Search" class="px-4 py-1 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-lg outline-none">
             <div>
