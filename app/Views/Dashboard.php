@@ -7,11 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" integrity="sha512-9xKTRVabjVeZmc+GUW8GgSmcREDunMM+Dt/GrzchfN8tkwHizc5RP4Ok/MXFFy5rIjJjzhndFScTceq5e6GvVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Dashboard</title>
-    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script> -->
 </head>
+
 <body class="bg-gray-100 flex justify-center items-center h-screen">
     <!-- Dashboard Table Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
@@ -33,9 +30,10 @@
                 </select>
                 <a href="/logout" class="text-white px-4 py-1 rounded-lg bg-red-600 inline-block">Logout</a>
                 <!-- <a onclick="dowloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block"><i class="fa-solid fa-download"></i></a> -->
-                <a href="javascript:void(0)" onclick="downloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">
+                <!-- <a href="" onclick="downloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">
                     <i class="fa-solid fa-download"></i>
-                </a>
+                </a> -->
+                <a href="<?= base_url('/download-users') ?>" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block" ><i class="fa-solid fa-download"></i></a>
             </div>
         </div>
 
@@ -162,68 +160,71 @@
             const tableBody = document.querySelector('table tbody');
             const rows = tableBody.querySelectorAll('tr');
             rows.forEach(function(row) {
-        const qualificationCell = row.querySelector('td:nth-child(5)'); // Adjust the index if the column order changes
+                const qualificationCell = row.querySelector('td:nth-child(5)'); // Adjust the index if the column order changes
 
-        if (qualificationCell) {
-            const qualification = qualificationCell.textContent.toLowerCase();
-            if (selectedQualification === "" || qualification === selectedQualification) {
-                row.style.display = ''; // Show the row
+                if (qualificationCell) {
+                    const qualification = qualificationCell.textContent.toLowerCase();
+                    if (selectedQualification === "" || qualification === selectedQualification) {
+                        row.style.display = ''; // Show the row
+                    } else {
+                        row.style.display = 'none'; // Hide the row
+                    }
+                }
+            });
+
+            // Update the "No Data Found" message visibility
+            const noDataMessage = document.getElementById('noDataMessage');
+            const visibleRows = Array.from(rows).some(row => row.style.display !== 'none');
+            if (visibleRows) {
+                noDataMessage.classList.add('hidden');
             } else {
-                row.style.display = 'none'; // Hide the row
+                noDataMessage.classList.remove('hidden');
             }
         }
-    });
 
-    // Update the "No Data Found" message visibility
-    const noDataMessage = document.getElementById('noDataMessage');
-    const visibleRows = Array.from(rows).some(row => row.style.display !== 'none');
-    if (visibleRows) {
-        noDataMessage.classList.add('hidden');
-    } else {
-        noDataMessage.classList.remove('hidden');
-    }
-}
+        // function downloadData() {
+        //     const tableBody = document.querySelector('table tbody');
+        //     const rows = tableBody.querySelectorAll('tr');
+        //     const csvRows = [];
 
-        function downloadData() {
-            const tableBody = document.querySelector('table tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            const csvRows = [];
+        //     // Get table headers
+        //     const header = document.querySelector('table thead');
+        //     const headers = header.querySelectorAll('th');
+        //     const headerRow = [];
+        //     headers.forEach(headerCell => {
+        //         headerRow.push(headerCell.innerText);
+        //     });
+        //     csvRows.push(headerRow.join(',')); // Add header row to CSV
 
-            // Get table headers
-            const header = document.querySelector('table thead');
-            const headers = header.querySelectorAll('th');
-            const headerRow = [];
-            headers.forEach(headerCell => {
-                headerRow.push(headerCell.innerText);
-            });
-            csvRows.push(headerRow.join(',')); // Add header row to CSV
+        //     // Loop through each row and extract data
+        //     rows.forEach(row => {
+        //         const cells = row.querySelectorAll('td');
+        //         const rowData = [];
+        //         cells.forEach(cell => {
+        //             rowData.push(cell.innerText); // Extract cell text
+        //         });
+        //         csvRows.push(rowData.join(',')); // Join row data with commas
+        //     });
 
-            // Loop through each row and extract data
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowData = [];
-                cells.forEach(cell => {
-                    rowData.push(cell.innerText); // Extract cell text
-                });
-                csvRows.push(rowData.join(',')); // Join row data with commas
-            });
+        //     // Convert to CSV string
+        //     const csvData = csvRows.join('\n');
 
-            // Convert to CSV string
-            const csvData = csvRows.join('\n');
+        //     // Create a Blob with CSV data
+        //     const blob = new Blob([csvData], {
+        //         type: 'text/csv'
+        //     });
 
-            // Create a Blob with CSV data
-            const blob = new Blob([csvData], {
-                type: 'text/csv'
-            });
+        //     // Create a temporary link to trigger download
+        //     const link = document.createElement('a');
+        //     link.href = URL.createObjectURL(blob);
+        //     link.download = 'users_data.csv'; // Filename for download
 
-            // Create a temporary link to trigger download
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'users_data.csv'; // Filename for download
+        //     // Programmatically click the link to trigger the download
+        //     link.click();
+        // }
 
-            // Programmatically click the link to trigger the download
-            link.click();
-        }
+
+
 
         function filterTable() {
             const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();

@@ -17,3 +17,4 @@ $routes->post('/logout', 'Home::Logout');
 $routes->post('/update-user', 'Home::updateUser');
 $routes->get('/delete-user/(:num)/(:any)', 'Home::deleteUser/$1/$2');
 $routes->delete('/delete-user/(:num)/(:any)', 'Home::deleteUser/$1/$2');
+$routes->get('/download-users', 'Home::downloadCSV');
