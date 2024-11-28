@@ -13,75 +13,75 @@ class Home extends BaseController
     }
 
 
-    // public function dashboard()
-    // {
-    //     if (!$this->session->has('user') && !$this->session->has('token')) {
-    //         return redirect()->to('/login');
-    //     }
+    public function uploadCsv()
+    {
+        if (!$this->session->has('user') && !$this->session->has('token')) {
+            return redirect()->to('/login');
+        }
 
-    //     $user_model = new UserModel();
+        helper(['form', 'url']);
 
-    //     // Pagination setup
-    //     $page = $this->request->getVar('page') ?? 1;  // Default to page 1 if no page is set
-    //     $perPage = 5;  // Define how many users per page
-    //     $offset = ($page - 1) * $perPage;  // Offset for the SQL query
+        $file = $this->request->getFile('csv_file');
 
-    //     // Get search query from URL
-    //     $searchQuery = $this->request->getVar('searchQuery') ?? '';
+        if ($file->isValid() && !$file->hasMoved()) {
+            // Generate a unique name and move the file to the uploads directory
+            $fileName = $file->getRandomName();
+            $filePath = WRITEPATH . 'uploads/' . $fileName;
 
-    //     // Apply search filter
-    //     if ($searchQuery) {
-    //         // If search query is set, filter by name (or other fields)
-    //         $users = $user_model->like('name', $searchQuery)
-    //             ->orderBy('id', 'ASC')
-    //             ->findAll($perPage, $offset);
-    //     } else {
-    //         $users = $user_model->orderBy('id', 'ASC')
-    //             ->findAll($perPage, $offset);
-    //     }
+            try {
+                $file->move(WRITEPATH . 'uploads/', $fileName);
+            } catch (\CodeIgniter\HTTP\Exceptions\HTTPException $e) {
+                return redirect()->back()->with('error', 'Failed to upload file: ' . $e->getMessage());
+            }
 
-    //     // Get the total number of users for pagination
-    //     $totalUsers = $user_model->countAll();
+            // Process the uploaded file
+            $file = fopen($filePath, 'r');
+            $userModel = new UserModel();
+            $client = new Client();
+            $nodeApiUrl = 'http://localhost:3000/api/register';
 
-    //     // Calculate the number of pages
-    //     $totalPages = ceil($totalUsers / $perPage);
+            $headers = fgetcsv($file); // Assuming the first row contains headers
+            $errors = [];
 
-    //     // MongoDB users fetch logic (same as you already have)
-    //     try {
-    //         $client = new Client();
-    //         $response = $client->get('http://localhost:3000/api/dashboard', [
-    //             'headers' => [
-    //                 'Accept' => 'application/json',
-    //                 'Authorization' => 'Bearer ' . $this->session->get('token')
-    //             ]
-    //         ]);
-    //         if ($response->getStatusCode() === 200) {
-    //             $mongo_users = json_decode($response->getBody()->getContents());
-    //             foreach ($users as $index => $row) {
-    //                 if (isset($mongo_users->getUsers[$index]) && $mongo_users->getUsers[$index]->email === $row->email) {
-    //                     $users[$index]->mongoId = $mongo_users->getUsers[$index]->_id;
-    //                 } else {
-    //                     // Set mongoId as null if not found
-    //                     $users[$index]->mongoId = null;
-    //                 }
-    //             }
-    //         } else {
-    //             log_message('error', 'Node.js API returned status code: ' . $response->getStatusCode());
-    //             $mongo_users = [];
-    //         }
-    //     } catch (\Throwable $e) {
-    //         echo "Unable to get data from MongoDB.";
-    //         throw $e;
-    //     }
+            while (($row = fgetcsv($file)) !== FALSE) {
+                $data = array_combine($headers, $row);
 
-    //     // Pass paginated users, search query, and total pages to the view
-    //     return view('dashboard', [
-    //         'users' => $users,
-    //         'totalPages' => $totalPages,
-    //         'currentPage' => $page,
-    //         'searchQuery' => $searchQuery
-    //     ]);
-    // }
+                // Encrypt the password
+                $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+
+                // Save to MySQL
+                if (!$userModel->save($data)) {
+                    $errors[] = "Failed to register user with email: " . $data['email'] . " in MySQL.";
+                    continue; // Skip sending to Node.js if MySQL save fails
+                }
+
+                // Send to Node.js API for MongoDB storage
+                try {
+                    $client->post($nodeApiUrl, [
+                        'json' => [
+                            'name' => $data['name'],
+                            'age' => $data['age'],
+                            'qualification' => $data['qualification'],
+                            'email' => $data['email'],
+                            'password' => $row[array_search('password', $headers)] // Plain password for Node.js
+                        ]
+                    ]);
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to register user with email: " . $data['email'] . " in MongoDB: " . $e->getMessage();
+                }
+            }
+
+            fclose($file);
+
+            if (empty($errors)) {
+                return redirect()->back()->with('success', 'All users registered successfully in both databases.');
+            } else {
+                return redirect()->back()->with('error', implode('<br>', $errors));
+            }
+        } else {
+            return redirect()->back()->with('error', 'File upload failed.');
+        }
+    }
 
     public function dashboard()
     {
@@ -93,7 +93,7 @@ class Home extends BaseController
 
         // Pagination setup
         $page = $this->request->getVar('page') ?? 1;  // Default to page 1 if no page is set
-        $perPage = 5;  // Define how many users per page
+        $perPage = 8;  // Define how many users per page
         $offset = ($page - 1) * $perPage;  // Offset for the SQL query
 
         // Get search query from URL
@@ -164,13 +164,13 @@ class Home extends BaseController
     {
         // Load the User model
         $userModel = new UserModel();
-        
+
         // Fetch data from the database
         $users = $userModel->findAll();
 
         // Prepare CSV data
         $csvData = [];
-        
+
         // Add header row
         $csvData[] = ['ID', 'Name', 'Age', 'Qualification', 'Email']; // Adjust according to your table structure
 
@@ -295,10 +295,11 @@ class Home extends BaseController
                         return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
                     }
                 } catch (\Exception $e) {
-                    return redirect()->back()->with('error', 'Error connecting to node.js server: ' . $e->getMessage());
+                    // return redirect()->back()->with('error', 'Error connecting to node.js server: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
                 }
             }
-        }
+            }
 
         return view('login');
     }
@@ -365,7 +366,7 @@ class Home extends BaseController
                         'email' => $email
                     ]
                 ]);
-                return view('/dashboard');
+                return redirect()->to('/dashboard')->with('success', 'Data Updated Successfully');
             } catch (\Exception $e) {
                 // echo "<pre>";
                 // print_r($e); die;

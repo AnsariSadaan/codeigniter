@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="<?= base_url() ?>css/styles.css?v=1.0">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css" />
     <title>Sign Up</title>
 </head>
 
@@ -61,7 +62,21 @@
         <!-- Form End -->
     </div>
     <!-- Signup Form Container End -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            <?php if (session()->getFlashdata('success')) { ?>
+                alertify.set('notifier', 'position', 'top-right');
+                alertify.success("<?= session()->getFlashdata('success') ?>");
+            <?php } ?>
 
+            <?php if (session()->getFlashdata('error')) { ?>
+                alertify.set('notifier', 'position', 'top-right');
+                alertify.error('<?= session()->getFlashdata('error') ?>');
+            <?php } ?>
+        });
+    </script>
 </body>
 
 </html>

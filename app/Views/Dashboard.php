@@ -6,19 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" integrity="sha512-9xKTRVabjVeZmc+GUW8GgSmcREDunMM+Dt/GrzchfN8tkwHizc5RP4Ok/MXFFy5rIjJjzhndFScTceq5e6GvVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css" />
     <title>Dashboard</title>
 </head>
 
 <body class="bg-gray-100 flex justify-center items-center h-screen">
     <!-- Dashboard Table Container -->
 
-    
+
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <!-- Logout Link -->
         <h1 class="text-3xl font-semibold text-center text-gray-800">User Dashboard</h1>
-        <h1>CSV data upload</h1>
-        <input type="file" >
-        <button class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">Upload</button>
+        <h1>CSV Data Upload</h1>
+        <form action="/uploadCsv" method="post" enctype="multipart/form-data">
+            <input type="file" name="csv_file" accept=".csv" required>
+            <button type="submit" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">Upload</button>
+        </form>
         <div class="flex justify-between items-center mb-6">
             <input type="search" id="searchInput" onkeyup="filterTable()" placeholder="Search" class="px-4 py-1 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-lg outline-none">
             <div>
@@ -38,7 +41,7 @@
                 <!-- <a href="" onclick="downloadData()" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block">
                     <i class="fa-solid fa-download"></i>
                 </a> -->
-                <a href="<?= base_url('/download-users') ?>" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block" ><i class="fa-solid fa-download"></i></a>
+                <a href="<?= base_url('/download-users') ?>" class="text-white px-4 py-1 rounded-lg bg-green-600 inline-block"><i class="fa-solid fa-download"></i></a>
             </div>
         </div>
 
@@ -92,29 +95,61 @@
         <!-- pagination start -->
         <div class="flex justify-center mt-6">
             <nav aria-label="Page navigation example">
-                <ul class="inline-flex -space-x-px">
+                <ul class="inline-flex items-center -space-x-px">
+                    <!-- Previous Button -->
                     <?php if ($currentPage > 1): ?>
                         <li>
-                            <a href="/dashboard?page=<?php echo $currentPage - 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">Previous</a>
+                            <a href="/dashboard?page=<?php echo $currentPage - 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900 rounded-l-lg">
+                                Previous
+                            </a>
                         </li>
                     <?php endif; ?>
 
-                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <li>
-                            <a href="/dashboard?page=<?php echo $i; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900 <?php echo ($i == $currentPage) ? 'font-bold' : ''; ?>">
-                                <?php echo $i; ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
+                    <!-- Pagination Links -->
+                    <?php
+                    // Determine the page range to display
+                    $pageRange = 5;
+                    $startPage = max(1, $currentPage - floor($pageRange / 2));
+                    $endPage = min($totalPages, $currentPage + floor($pageRange / 2));
 
+                    // Add "Previous Ellipsis" if the range starts before 1
+                    if ($startPage > 1) {
+                        echo '<li><a href="/dashboard?page=1&searchQuery=' . urlencode($searchQuery) . '" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">1</a></li>';
+                        if ($startPage > 2) {
+                            echo '<li><span class="px-4 py-2 text-gray-400">...</span></li>';
+                        }
+                    }
+
+                    // Loop through the pages
+                    for ($i = $startPage; $i <= $endPage; $i++) {
+                        echo '<li>';
+                        echo '<a href="/dashboard?page=' . $i . '&searchQuery=' . urlencode($searchQuery) . '" class="px-4 py-2 text-indigo-600 hover:text-indigo-900 ' . ($i == $currentPage ? 'font-bold' : '') . '">';
+                        echo $i;
+                        echo '</a>';
+                        echo '</li>';
+                    }
+
+                    // Add "Next Ellipsis" if the range ends before the last page
+                    if ($endPage < $totalPages) {
+                        if ($endPage < $totalPages - 1) {
+                            echo '<li><span class="px-4 py-2 text-gray-400">...</span></li>';
+                        }
+                        echo '<li><a href="/dashboard?page=' . $totalPages . '&searchQuery=' . urlencode($searchQuery) . '" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">' . $totalPages . '</a></li>';
+                    }
+                    ?>
+
+                    <!-- Next Button -->
                     <?php if ($currentPage < $totalPages): ?>
                         <li>
-                            <a href="/dashboard?page=<?php echo $currentPage + 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900">Next</a>
+                            <a href="/dashboard?page=<?php echo $currentPage + 1; ?>&searchQuery=<?php echo urlencode($searchQuery); ?>" class="px-4 py-2 text-indigo-600 hover:text-indigo-900 rounded-r-lg">
+                                Next
+                            </a>
                         </li>
                     <?php endif; ?>
                 </ul>
             </nav>
         </div>
+
         <!-- pagination end -->
 
     </div>
@@ -287,12 +322,16 @@
             }
         }
     </script>
-    <!-- <script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+    <script>
         $(document).ready(function() {
-            $('#myTable').DataTable();
-        })
+            <?php if (session()->getFlashdata('success')) { ?>
+                alertify.set('notifier', 'position', 'top-right');
+                alertify.success("<?= session()->getFlashdata('success') ?>");
+            <?php } ?>
+        });
     </script>
-    <script src="https://cdn.datatables.net/2.1.8/js/jquery.dataTables.min.js"></script> -->
 </body>
 
 </html>
