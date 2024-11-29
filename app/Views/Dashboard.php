@@ -308,12 +308,10 @@
             document.getElementById('editmongoId').value = mongoId;
             document.getElementById('editModal').classList.remove('hidden');
         }
-
         // Close the edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.add('hidden');
         }
-
         // Confirm deletion and send delete request
         function confirmDelete(id, mongoId) {
             if (confirm('Are you sure you want to delete this user?')) {
@@ -330,6 +328,20 @@
                 alertify.set('notifier', 'position', 'top-right');
                 alertify.success("<?= session()->getFlashdata('success') ?>");
             <?php } ?>
+        });
+    </script>
+
+<script>
+        // Listen for the download link to trigger a page refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadLink = document.querySelector('[download="invalid_entries.csv"]');
+            if (downloadLink) {
+                downloadLink.addEventListener('click', function() {
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000); // Adjust this delay to suit your needs
+                });
+            }
         });
     </script>
 </body>

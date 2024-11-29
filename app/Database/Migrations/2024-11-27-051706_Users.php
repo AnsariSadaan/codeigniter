@@ -19,23 +19,28 @@ class Users extends Migration
             'name' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                "null" => false
             ],
             'age' => [
                 'type' => 'INT',
                 'constraint' => 5,
+                'null' => true
             ],
             'qualification' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                'null' => true
             ],
             'email' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
-                'unique' => true
+                'unique' => true,
+                "null" => false
             ],
             'password' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                "null" => false
             ]
         ]);
         $this->forge->addPrimaryKey('id');

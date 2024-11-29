@@ -6,18 +6,18 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->get('/signup', 'Home::Signup');
-$routes->post('/signup', 'Home::Signup');
-$routes->get('/login', 'Home::Login');
-$routes->post('/login', 'Home::Login');
+$routes->get('/signup', 'Signup::Signup');
+$routes->post('/signup', 'Signup::Signup');
+$routes->get('/login', 'Login::Login');
+$routes->post('/login', 'Login::Login');
+$routes->get('/logout', 'Logout::Logout');
+$routes->post('/logout', 'Logout::Logout');
 $routes->get('/dashboard', 'Home::Dashboard');
-$routes->get('/logout', 'Home::Logout');
-$routes->post('/logout', 'Home::Logout');
 
-$routes->post('/update-user', 'Home::updateUser');
-$routes->get('/delete-user/(:num)/(:any)', 'Home::deleteUser/$1/$2');
-$routes->delete('/delete-user/(:num)/(:any)', 'Home::deleteUser/$1/$2');
-$routes->get('/download-users', 'Home::downloadCSV');
+$routes->post('/update-user', 'UpdateUser::updateUser');
+$routes->get('/delete-user/(:num)/(:any)', 'DeleteUser::deleteUser/$1/$2');
+$routes->delete('/delete-user/(:num)/(:any)', 'DeleteUser::deleteUser/$1/$2');
+$routes->get('/download-users', 'DownloadCsv::downloadCSV');
 
-$routes->get('/uploadCsv', 'Home::uploadCsv'); 
-$routes->post('/uploadCsv', 'Home::uploadCsv'); 
+$routes->get('/uploadCsv', 'UploadCsv::uploadCsv'); 
+$routes->post('/uploadCsv', 'UploadCsv::uploadCsv'); 
